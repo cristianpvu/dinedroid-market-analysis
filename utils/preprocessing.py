@@ -24,18 +24,15 @@ def load_clean() -> pd.DataFrame:
     """Dataset cu valori lipsă tratate și outlieri winsorizați."""
     df = load_enriched().copy()
 
-    # 1. Missing values (inclusiv cele "ascunse")
     df["Cuisines"] = df["Cuisines"].fillna("Unknown")
     df.loc[df["Aggregate rating"] == 0, "Aggregate rating"] = np.nan
     df.loc[df["Average Cost for two"] == 0, "Average Cost for two"] = np.nan
 
     for col in ["Aggregate rating", "Average Cost for two"]:
         df[col] = df.groupby("Country")[col].transform(lambda s: s.fillna(s.median()))
-    # fallback global pentru țări cu toate valorile lipsă
     for col in ["Aggregate rating", "Average Cost for two"]:
         df[col] = df[col].fillna(df[col].median())
 
-    # 2. Outlieri – winsorizare per țară pe cost, global pe votes
     df["Average Cost for two"] = df.groupby("Country")["Average Cost for two"].transform(
         winsorize
     )

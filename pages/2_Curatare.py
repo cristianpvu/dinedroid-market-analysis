@@ -27,9 +27,6 @@ st.markdown(
 df = load_enriched()
 st.caption(f"Dimensiune set de date inițial: **{df.shape[0]:,} rânduri × {df.shape[1]} coloane**")
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 1. Valori lipsă
-# ──────────────────────────────────────────────────────────────────────────────
 st.header("2.1 Valori lipsă")
 
 missing = (
@@ -61,7 +58,6 @@ with col_b:
         """
     )
 
-# Detectare "missing ascuns"
 hidden_missing = pd.DataFrame(
     {
         "Coloană": ["Aggregate rating", "Average Cost for two"],
@@ -106,9 +102,6 @@ st.success(
     f"și **{df_clean['Average Cost for two'].isna().sum()}** costuri rămase NaN."
 )
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 2. Valori extreme
-# ──────────────────────────────────────────────────────────────────────────────
 st.header("2.2 Valori extreme (outlieri)")
 
 st.markdown(
@@ -209,9 +202,6 @@ compare["Înainte"] = compare["Înainte"].round(2)
 compare["După"] = compare["După"].round(2)
 st.dataframe(compare, use_container_width=True, hide_index=True)
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 3. Interpretare economică
-# ──────────────────────────────────────────────────────────────────────────────
 st.header("2.3 Interpretarea economică a rezultatelor")
 st.markdown(
     """
@@ -230,6 +220,5 @@ st.markdown(
     """
 )
 
-# salvăm DataFrame-ul curățat în session state pentru paginile următoare
 st.session_state["df_clean"] = df_winsor
 st.caption("✅ Setul curățat este disponibil în `st.session_state['df_clean']` pentru paginile următoare.")

@@ -5,7 +5,6 @@ import streamlit as st
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "zomato.csv"
 
-# Mapare cod țară -> nume țară (conform documentației Zomato Kaggle)
 COUNTRY_CODES = {
     1: "India",
     14: "Australia",
