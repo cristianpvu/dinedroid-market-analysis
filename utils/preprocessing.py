@@ -39,3 +39,29 @@ def load_clean() -> pd.DataFrame:
     df["Votes"] = winsorize(df["Votes"])
 
     return df
+
+
+@st.cache_data(show_spinner=False)
+def load_featured() -> pd.DataFrame:
+    """load_clean() plus derived ML features used across modelling pages."""
+    df = load_clean().copy()
+    df["has_booking"] = (df["Has Table booking"] == "Yes").astype(int)
+    df["has_delivery"] = (df["Has Online delivery"] == "Yes").astype(int)
+    df["city_size"] = df["City"].map(df["City"].value_counts())
+    df["cost_relativ"] = df.groupby("Country")["Average Cost for two"].transform(
+        lambda s: s / s.median()
+    )
+    return df
+
+
+@st.cache_data(show_spinner=False)
+def load_model_df() -> pd.DataFrame:
+    """load_featured() plus the binary premium-lead target used in pages 7 & 9."""
+    df = load_featured().copy()
+    votes_median = df["Votes"].median()
+    df["target"] = (
+        (df["Aggregate rating"] >= 4.0)
+        & (df["Votes"] >= votes_median)
+        & (df["Price range"] >= 2)
+    ).astype(int)
+    return df
