@@ -2,11 +2,13 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import statsmodels.api as sm
 import streamlit as st
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 from utils.preprocessing import load_featured
 
@@ -141,7 +143,77 @@ fig = px.histogram(
 )
 st.plotly_chart(fig, use_container_width=True)
 
-st.header("8.7 Interpretarea economică")
+st.header("8.7 Regresie multiplă cu `statsmodels` (OLS)")
+st.markdown(
+    """
+    `scikit-learn` e bun pentru predicție, dar pentru **inferență statistică**
+    (semnificația coeficienților, intervale de încredere, multicoliniaritate)
+    folosim `statsmodels.api.OLS`. Spre deosebire de `LinearRegression`, `OLS`
+    cere adăugarea explicită a coloanei de intercept prin `sm.add_constant`.
+    """
+)
+
+X_train_sm = sm.add_constant(X_train_s)
+ols_model = sm.OLS(y_train, X_train_sm).fit()
+
+feature_names = ["const"] + [FEATURES[f] for f in selected]
+sm_coefs = pd.DataFrame(
+    {
+        "Variabilă": feature_names,
+        "Coef": ols_model.params,
+        "Std err": ols_model.bse,
+        "t": ols_model.tvalues,
+        "p-value": ols_model.pvalues,
+        "CI 2.5%": ols_model.conf_int()[:, 0],
+        "CI 97.5%": ols_model.conf_int()[:, 1],
+    }
+).round(4)
+
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("R²", f"{ols_model.rsquared:.3f}")
+c2.metric("R² ajustat", f"{ols_model.rsquared_adj:.3f}")
+c3.metric("F-statistic", f"{ols_model.fvalue:.2f}")
+c4.metric("Prob (F-stat)", f"{ols_model.f_pvalue:.2e}")
+
+st.subheader("Tabel coeficienți + semnificație statistică")
+st.dataframe(sm_coefs, use_container_width=True, hide_index=True)
+
+st.markdown(
+    """
+    **Cum se citește tabelul:**
+    - **p-value < 0.05** → coeficientul este semnificativ statistic (variabila
+      chiar contribuie la explicarea ratingului).
+    - **CI (interval de încredere)** care **nu include 0** confirmă semnificația.
+    - **R² ajustat** penalizează adăugarea de variabile inutile — îl preferăm
+      lui R² brut când comparăm modele cu număr diferit de predictori.
+    - **F-statistic** testează dacă modelul în ansamblu este mai bun decât
+      simpla predicție a mediei. Prob(F) < 0.05 → modelul are valoare predictivă.
+    """
+)
+
+with st.expander("Summary complet statsmodels (output text)"):
+    st.text(str(ols_model.summary()))
+
+st.subheader("Verificarea multicoliniarității (VIF)")
+st.markdown(
+    """
+    **VIF (Variance Inflation Factor)** măsoară cât de mult este "umflată"
+    varianta unui coeficient din cauza corelației cu celelalte variabile.
+    Regulă uzuală: **VIF > 5** semnalează multicoliniaritate problematică,
+    **VIF > 10** este gravă.
+    """
+)
+vif_data = pd.DataFrame(
+    {
+        "Variabilă": [FEATURES[f] for f in selected],
+        "VIF": [
+            variance_inflation_factor(X_train_s, i) for i in range(X_train_s.shape[1])
+        ],
+    }
+).round(3)
+st.dataframe(vif_data, use_container_width=True, hide_index=True)
+
+st.header("8.8 Interpretarea economică")
 st.markdown(
     f"""
     - **R² = {r2:.3f}** — modelul explică **{r2*100:.1f}%** din variația ratingurilor.

@@ -3,6 +3,7 @@ pandas>=2.1
 numpy>=1.26
 plotly>=5.18
 scikit-learn>=1.4
+statsmodels>=0.14
 geopandas>=0.14
 shapely>=2.0
 matplotlib>=3.8
