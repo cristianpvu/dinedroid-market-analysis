@@ -21,7 +21,7 @@ st.markdown(
 
     **Metodă.** `KMeans` din `scikit-learn`, aplicat pe variabile numerice
     standardizate. Alegem `k` optim pe baza:
-    - **regulii cotului** (inerția vs k)
+    - **regulii elbow** (inerția vs k)
     - **scorului silhouette**
     """
 )
@@ -80,7 +80,7 @@ diag = compute_kmeans_diagnostics(X_scaled, (2, 8))
 
 c1, c2 = st.columns(2)
 with c1:
-    fig = px.line(diag, x="k", y="inertia", markers=True, title="Cot (inertia)")
+    fig = px.line(diag, x="k", y="inertia", markers=True, title="Elbow (inertia)")
     st.plotly_chart(fig, use_container_width=True)
 with c2:
     fig = px.line(
